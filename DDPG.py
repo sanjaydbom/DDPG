@@ -20,8 +20,8 @@ OBS_SPACE = env.observation_space.shape[0]
 ACTION_SPACE = env.action_space.shape[0]
 
 actor, target_actor, critic, target_critic = get_architecture(OBS_SPACE, ACTION_SPACE, hyperparams['ACTOR_HIDDEN_LAYERS'], hyperparams['CRITIC_HIDDEN_LAYERS'], hyperparams['TAU'])
-actor_optim = optim.Adam(actor.parameters(), hyperparams['ACTOR_LR'])
-critic_optim = optim.Adam(critic.parameters(), hyperparams['CRITIC_LR'])
+actor_optim = optim.Adam(actor.parameters(), float(hyperparams['ACTOR_LR']))
+critic_optim = optim.Adam(critic.parameters(), float(hyperparams['CRITIC_LR']))
 
 GAMMA = hyperparams['GAMMA']
 
@@ -69,14 +69,14 @@ for epoch in range(NUM_EPOCHS):
 
             state_array = torch.stack(state_array)
             action_array = torch.stack(action_array)
-            reward_array = torch.tensor(action_array, dtype = torch.float32).unsqueeze(1)
+            reward_array = torch.tensor(reward_array, dtype = torch.float32).unsqueeze(1)
             next_state_array = torch.stack(next_state_array)
-            done_array = torch.tensor(done_array, dtype=torch.float32)
+            done_array = torch.tensor(done_array, dtype=torch.float32).unsqueeze(1)
 
             with torch.no_grad():
                 best_next_actions = target_actor(next_state_array)
-                target_state_values = reward_array + GAMMA * target_critic(next_state_array, best_next_actions) * (1 - done_array).unsqueeze(1)
-            predicted_state_values = critic(state_array)
+                target_state_values = reward_array + GAMMA * target_critic(next_state_array, best_next_actions) * (1 - done_array)
+            predicted_state_values = critic(state_array, action_array)
 
             critic_optim.zero_grad()
             critic_loss = mse(target_state_values, predicted_state_values)
@@ -85,15 +85,15 @@ for epoch in range(NUM_EPOCHS):
 
             actor_optim.zero_grad()
             predicted_best_actions = actor(state_array)
-            actor_loss = -critic(state_array,action_array).mean()
+            actor_loss = -critic(state_array,predicted_best_actions).mean()
             actor_loss.backward()
             actor_optim.step()
 
             target_actor.update(actor)
             target_critic.update(critic)
 
-            actor_loss_array.append(actor_loss)
-            critic_loss_array.append(critic_loss)
+            actor_loss_array.append(actor_loss.detach().numpy())
+            critic_loss_array.append(critic_loss.detach().numpy())
 
         if terminated or truncated:
             break
@@ -114,8 +114,9 @@ plt.xlabel("Epoch")
 plt.ylabel("Rewards")
 plt.savefig(hyperparams['FILE_NAME'] + 'RewardsGraph.png')
 
-plt.plot(actor_loss, label = "Actor Loss", color = 'green')
-plt.plot(critic_loss, label = "Critic Loss", color = 'blue')
+plt.figure()
+plt.plot(actor_loss_array, label = "Actor Loss", color = 'green')
+plt.plot(critic_loss_array, label = "Critic Loss", color = 'blue')
 plt.grid()
 plt.legend()
 plt.title("Loss During Training")

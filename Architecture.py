@@ -19,7 +19,7 @@ class Actor(nn.Module):
             x = self.relu(x)
         x = self.tail(x)
 
-        return x
+        return torch.tanh(x)
     
     def update(self, actor):
         for target_param, param in zip(self.parameters(), actor.parameters()):
@@ -50,8 +50,8 @@ class Critic(nn.Module):
             target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
     
 def get_architecture(obs_space, action_space, actor_hidden, critic_hidden, tau):
-    actor = Actor(obs_space,actor_hidden,actor_hidden, None)
-    target_actor = Actor(obs_space,actor_hidden,actor_hidden, tau)
+    actor = Actor(obs_space,action_space,actor_hidden, None)
+    target_actor = Actor(obs_space,action_space,actor_hidden, tau)
     target_actor.load_state_dict(actor.state_dict())
     critic = Critic(obs_space,action_space,critic_hidden, None)
     target_critic = Critic(obs_space,action_space,critic_hidden, tau)
