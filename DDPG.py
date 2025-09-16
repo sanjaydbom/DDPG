@@ -18,8 +18,9 @@ with open(hyperparams_file, 'r') as f:
 env = gym.make(hyperparams['ENV_NAME'])
 OBS_SPACE = env.observation_space.shape[0]
 ACTION_SPACE = env.action_space.shape[0]
+action_range = env.action_space.high
 
-actor, target_actor, critic, target_critic = get_architecture(OBS_SPACE, ACTION_SPACE, hyperparams['ACTOR_HIDDEN_LAYERS'], hyperparams['CRITIC_HIDDEN_LAYERS'], hyperparams['TAU'])
+actor, target_actor, critic, target_critic = get_architecture(OBS_SPACE, ACTION_SPACE, hyperparams['ACTOR_HIDDEN_LAYERS'], hyperparams['CRITIC_HIDDEN_LAYERS'], hyperparams['TAU'], action_range)
 actor_optim = optim.Adam(actor.parameters(), float(hyperparams['ACTOR_LR']))
 critic_optim = optim.Adam(critic.parameters(), float(hyperparams['CRITIC_LR']))
 

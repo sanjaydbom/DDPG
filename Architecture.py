@@ -3,13 +3,14 @@ from torch import nn
 
 
 class Actor(nn.Module):
-    def __init__(self, obs_space, action_space, hidden_layers, TAU):
+    def __init__(self, obs_space, action_space, hidden_layers, TAU, action_range):
         super(Actor, self).__init__()
         self.head = nn.Linear(obs_space, hidden_layers[0])
         self.hidden = nn.ModuleList([nn.Linear(hidden_layers[i], hidden_layers[i+1]) for i in range(len(hidden_layers)-1)])
         self.tail = nn.Linear(hidden_layers[-1], action_space)
         self.relu = nn.ReLU()
         self.tau = TAU
+        self.action_range = action_range
 
     def forward(self, state):
         x = self.head(state)
@@ -19,7 +20,7 @@ class Actor(nn.Module):
             x = self.relu(x)
         x = self.tail(x)
 
-        return torch.tanh(x)
+        return self.action_range * torch.tanh(x)
     
     def update(self, actor):
         for target_param, param in zip(self.parameters(), actor.parameters()):
@@ -49,9 +50,9 @@ class Critic(nn.Module):
         for target_param, param in zip(self.parameters(), critic.parameters()):
             target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
     
-def get_architecture(obs_space, action_space, actor_hidden, critic_hidden, tau):
-    actor = Actor(obs_space,action_space,actor_hidden, None)
-    target_actor = Actor(obs_space,action_space,actor_hidden, tau)
+def get_architecture(obs_space, action_space, actor_hidden, critic_hidden, tau, action_range):
+    actor = Actor(obs_space,action_space,actor_hidden, None, action_range)
+    target_actor = Actor(obs_space,action_space,actor_hidden, tau, action_range)
     target_actor.load_state_dict(actor.state_dict())
     critic = Critic(obs_space,action_space,critic_hidden, None)
     target_critic = Critic(obs_space,action_space,critic_hidden, tau)
