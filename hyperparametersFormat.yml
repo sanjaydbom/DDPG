@@ -3,8 +3,8 @@ ENV_NAME: #Name of the environment
 ACTOR_HIDDEN_LAYERS: #Hidden Layers for Actor. Don't include the input and output layer
 CRITIC_HIDDEN_LAYERS: #Hidden Layers for Critic. Don't include the input and output layer
 
-ACTOR_LR:  #Actor Learning Rate
-CRITIC_LR:  #Critic Learning Rate
+ACTOR_LR:  #Actor Learning Rate-use scientific notation
+CRITIC_LR:  #Critic Learning Rate-use scientific notation
 
 GAMMA:  #Determines how much future rewards matter-dont use scientific notation
 TAU:  #How much to move target network toward actual network-dont use scientific notation
