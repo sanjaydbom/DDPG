@@ -17,8 +17,9 @@ with open(agent_params_file, 'r') as f:
 env = gym.make(hyperparams['ENV_NAME'])
 obs_dim = env.observation_space.shape[0]
 action_dim = env.action_space.shape[0]
+action_range = torch.tensor(env.action_space.high)
 
-actor = Actor(obs_dim, action_dim, hyperparams['ACTOR_HIDDEN_LAYERS'], None)
+actor = Actor(obs_dim, action_dim, hyperparams['ACTOR_HIDDEN_LAYERS'], None, action_range)
 actor.load_state_dict(torch.load(agent_file, weights_only=True))
 
 rewards = []
